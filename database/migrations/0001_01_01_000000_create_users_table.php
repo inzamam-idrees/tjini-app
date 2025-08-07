@@ -13,10 +13,17 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('first_name');
+            $table->string('last_name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->foreignId('school_id')->nullable()->constrained('schools')->onDelete('cascade');
+            $table->enum('role', ['super-admin', 'admin', 'dispatcher', 'viewer', 'parent', 'staff']);
+            $table->boolean('is_primary')->nullable(); // for parent
+            $table->string('relation')->nullable();
+            $table->string('child_name')->nullable();
+            $table->string('device_token')->nullable(); // for Firebase
             $table->rememberToken();
             $table->timestamps();
         });
