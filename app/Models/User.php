@@ -19,9 +19,15 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'school_id',
+        'is_primary',
+        'relation',
+        'child_name',
+        'device_token',
     ];
 
     /**
@@ -45,5 +51,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

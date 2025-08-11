@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->foreignId('school_id')->nullable()->constrained('schools')->onDelete('cascade');
-            $table->enum('role', ['super-admin', 'admin', 'dispatcher', 'viewer', 'parent', 'staff']);
+            // $table->enum('role', ['super-admin', 'admin', 'dispatcher', 'viewer', 'parent', 'staff']);
             $table->boolean('is_primary')->nullable(); // for parent
             $table->string('relation')->nullable();
             $table->string('child_name')->nullable();
