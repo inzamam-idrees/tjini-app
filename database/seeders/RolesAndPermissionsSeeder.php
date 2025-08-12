@@ -22,6 +22,6 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::create(['name' => 'dispatcher']);
         Role::create(['name' => 'viewer']);
         Role::create(['name' => 'parent']);
-        Role::create(['name' => 'staff']);
+        // Role::create(['name' => 'staff']);
     }
 }
