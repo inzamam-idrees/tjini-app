@@ -6,7 +6,7 @@
             </div>
             <div class="col-auto my-1">
                 <ul class="list-inline footer-link mb-0">
-                    <li class="list-inline-item"><a href="{{ url('/') }}">Home</a></li>
+                    <li class="list-inline-item"><a href="{{ url('/dashboard') }}">Home</a></li>
                 </ul>
             </div>
         </div>
@@ -14,8 +14,8 @@
 </footer>
 
 <!-- [Page Specific JS] start -->
-<script src="{{ asset('/') }}assets/js/plugins/apexcharts.min.js"></script>
-<script src="{{ asset('/') }}assets/js/pages/dashboard-default.js"></script>
+<script src="{{ asset('public/assets/js/plugins/apexcharts.min.js') }}"></script>
+<script src="{{ asset('public/assets/js/pages/dashboard-default.js') }}"></script>
 <!-- [Page Specific JS] end -->
 
 @include('admin.layouts.partials.footer_script')

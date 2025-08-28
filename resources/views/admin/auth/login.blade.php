@@ -5,7 +5,7 @@
   <div class="auth-wrapper v3">
     <div class="auth-form">
       <div class="auth-header">
-        <a href="#"><img src="{{ asset('assets/images/logo-dark.svg') }}" alt="img"></a>
+        <a href="#"><img src="{{ asset('public/assets/images/logo-dark.svg') }}" alt="img"></a>
       </div>
       <div class="card my-5">
         <div class="card-body">
@@ -38,21 +38,21 @@
             <div class="col-4">
               <div class="d-grid">
                 <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                  <img src="{{ asset('assets/images/authentication/google.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Google</span>
+                  <img src="{{ asset('public/assets/images/authentication/google.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Google</span>
                 </button>
               </div>
             </div>
             <div class="col-4">
               <div class="d-grid">
                 <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                  <img src="{{ asset('assets/images/authentication/twitter.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Twitter</span>
+                  <img src="{{ asset('public/assets/images/authentication/twitter.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Twitter</span>
                 </button>
               </div>
             </div>
             <div class="col-4">
               <div class="d-grid">
                 <button type="button" class="btn mt-2 btn-light-primary bg-light text-muted">
-                  <img src="{{ asset('assets/images/authentication/facebook.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Facebook</span>
+                  <img src="{{ asset('public/assets/images/authentication/facebook.svg') }}" alt="img"> <span class="d-none d-sm-inline-block"> Facebook</span>
                 </button>
               </div>
             </div>
