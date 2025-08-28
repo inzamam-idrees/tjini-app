@@ -54,6 +54,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function fullName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
     public function school()
     {
         return $this->belongsTo(School::class);

@@ -2,7 +2,7 @@
 <nav class="pc-sidebar">
     <div class="navbar-wrapper">
         <div class="m-header">
-            <a href="{{ route('dashboard') }}" class="b-brand text-primary">
+            <a href="{{ route('admin.dashboard') }}" class="b-brand text-primary">
                 <!-- ========   Change your logo from here   ============ -->
                 <img src="{{ asset('public/assets/images/logo-dark.svg') }}" class="img-fluid logo-lg" alt="logo">
             </a>
@@ -10,13 +10,36 @@
         <div class="navbar-content">
             <ul class="pc-navbar">
                 <li class="pc-item">
-                    <a href="{{ route('dashboard') }}" class="pc-link">
+                    <a href="{{ route('admin.dashboard') }}" class="pc-link">
                         <span class="pc-micon"><i class="ti ti-dashboard"></i></span>
                         <span class="pc-mtext">Dashboard</span>
                     </a>
                 </li>
 
                 <li class="pc-item pc-caption">
+                    <label>Modules</label>
+                    <i class="ti ti-dashboard"></i>
+                </li>
+                <li class="pc-item">
+                    <a href="{{ route('admin.schools') }}" class="pc-link">
+                        <span class="pc-micon"><i class="ti ti-typography"></i></span>
+                        <span class="pc-mtext">Schools</span>
+                    </a>
+                </li>
+                <li class="pc-item">
+                    <a href="{{ route('admin.parents') }}" class="pc-link">
+                        <span class="pc-micon"><i class="ti ti-user"></i></span>
+                        <span class="pc-mtext">Parents</span>
+                    </a>
+                </li>
+                <li class="pc-item">
+                    <a href="{{ route('admin.staff') }}" class="pc-link">
+                        <span class="pc-micon"><i class="ti ti-users"></i></span>
+                        <span class="pc-mtext">Staff</span>
+                    </a>
+                </li>
+
+                <!-- <li class="pc-item pc-caption">
                     <label>UI Components</label>
                     <i class="ti ti-dashboard"></i>
                 </li>
@@ -37,9 +60,9 @@
                         <span class="pc-micon"><i class="ti ti-plant-2"></i></span>
                         <span class="pc-mtext">Icons</span>
                     </a>
-                </li>
+                </li> -->
 
-                <li class="pc-item pc-caption">
+                <!-- <li class="pc-item pc-caption">
                     <label>Pages</label>
                     <i class="ti ti-news"></i>
                 </li>
@@ -54,9 +77,9 @@
                         <span class="pc-micon"><i class="ti ti-user-plus"></i></span>
                         <span class="pc-mtext">Register</span>
                     </a>
-                </li>
+                </li> -->
 
-                <li class="pc-item pc-caption">
+                <!-- <li class="pc-item pc-caption">
                     <label>Other</label>
                     <i class="ti ti-brand-chrome"></i>
                 </li>
@@ -100,9 +123,9 @@
                         <span class="pc-micon"><i class="ti ti-brand-chrome"></i></span>
                         <span class="pc-mtext">Sample page</span>
                     </a>
-                </li>
+                </li> -->
             </ul>
-            <div class="card text-center">
+            <!-- <div class="card text-center">
                 <div class="card-body">
                     <img src="{{ asset('public/assets/images/img-navbar-card.png') }}" alt="images" class="img-fluid mb-2">
                     <h5>Upgrade To Pro</h5>
@@ -110,7 +133,7 @@
                     <a href="https://codedthemes.com/item/berry-bootstrap-5-admin-template/" target="_blank"
                         class="btn btn-success">Buy Now</a>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </nav>
