@@ -22,7 +22,7 @@
                 </li>
                 <li class="pc-item">
                     <a href="{{ route('admin.schools') }}" class="pc-link">
-                        <span class="pc-micon"><i class="ti ti-typography"></i></span>
+                        <span class="pc-micon"><i class="ti ti-school"></i></span>
                         <span class="pc-mtext">Schools</span>
                     </a>
                 </li>
