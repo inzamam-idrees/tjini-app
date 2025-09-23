@@ -2,7 +2,7 @@
 (function () {
   
 var bouncer = new Bouncer('[data-validate]', {
-  disableSubmit: true,
+  disableSubmit: false,
   customValidations: {
     valueMismatch: function (field) {
       var selector = field.getAttribute('data-bouncer-match');
@@ -30,9 +30,10 @@ document.addEventListener(
 
 document.addEventListener(
   'bouncerFormValid',
-  function () {
-    alert('Form submitted successfully!');
-    window.location.reload();
+  function (event) {
+    // alert('Form submitted successfully!');
+    // window.location.reload();
+    event.target.submit();
   },
   false
 );

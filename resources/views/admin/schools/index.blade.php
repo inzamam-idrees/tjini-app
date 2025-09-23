@@ -4,13 +4,21 @@
 <link rel="stylesheet" href="{{ asset('public/assets/css/plugins/dataTables.bootstrap5.min.css') }}">
 @endpush
 
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+<li class="breadcrumb-item" aria-current="page">Schools</li>
+@endsection
+
 @section('content')
 <div class="row">
     <div class="col-sm-12">
         <div class="card">
             <div class="card-header">
-                <h5>Schools</h5>
-                <small>List of all schools</small>
+                <div class="float-start">
+                    <h5>Schools</h5>
+                    <small>List of all schools</small>
+                </div>
+                <a href="{{ route('admin.schools.create') }}" class="btn btn-primary float-end">Add New School</a>
             </div>
             <div class="card-body">
                 <div class="dt-responsive table-responsive">
@@ -20,7 +28,6 @@
                                 <th>Name</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -30,10 +37,13 @@
                                 <td>{{ $school->name }}</td>
                                 <td>{{ $school->start_time }}</td>
                                 <td>{{ $school->end_time }}</td>
-                                <td>{{ $school->status }}</td>
                                 <td>
                                     <a href="{{ route('admin.schools.edit', $school->id) }}" class="btn btn-primary">Edit</a>
-                                    <a href="{{ route('admin.schools.destroy', $school->id) }}" class="btn btn-danger">Delete</a>
+                                    <form action="{{ route('admin.schools.destroy', $school->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-danger btn-delete">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                             @endforeach

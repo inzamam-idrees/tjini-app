@@ -26,6 +26,12 @@ Route::middleware('guest')->name('admin.')->group(function () {
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/schools', [SchoolController::class, 'index'])->name('schools');
+    Route::get('/schools/create', [SchoolController::class, 'create'])->name('schools.create');
+    Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
+    Route::get('/schools/{id}/edit', [SchoolController::class, 'edit'])->name('schools.edit');
+    Route::put('/schools/{id}', [SchoolController::class, 'update'])->name('schools.update');
+    Route::delete('/schools/{id}', [SchoolController::class, 'destroy'])->name('schools.destroy');
+
     Route::get('/parents', [DashboardController::class, 'parents'])->name('parents');
     Route::get('/staff', [DashboardController::class, 'staff'])->name('staff');
 

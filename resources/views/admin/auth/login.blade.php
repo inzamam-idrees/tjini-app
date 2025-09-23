@@ -5,7 +5,7 @@
   <div class="auth-wrapper v3">
     <div class="auth-form justify-content-evenly">
       <div class="auth-header">
-        <a href="#"><img src="{{ asset('public/assets/images/logo-dark.svg') }}" alt="img"></a>
+        <a href="#"><img src="{{ asset('public/assets/images/tjiniapp-logo-dark.png') }}" alt="img" style="max-width: 200px;"></a>
       </div>
       <div class="card my-5">
         <div class="card-body">
@@ -74,7 +74,7 @@
       <div class="auth-footer row d-none">
         <!-- <div class=""> -->
         <div class="col my-1">
-          <p class="m-0">Copyright © <a href="#">Inzamam Idrees</a></p>
+          <p class="m-0">Copyright © <a href="https://inzamam-idrees.netlify.app" target="_blank">Inzamam Idrees</a></p>
         </div>
         <div class="col-auto my-1">
           <ul class="list-inline footer-link mb-0">

@@ -44,7 +44,7 @@
         <!-- [Mobile Media Block end] -->
         <div class="ms-auto">
             <ul class="list-unstyled">
-                <li class="dropdown pc-h-item">
+                <li class="dropdown pc-h-item d-none">
                     <a
                         class="pc-head-link dropdown-toggle arrow-none me-0"
                         data-bs-toggle="dropdown"

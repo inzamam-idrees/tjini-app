@@ -1,5 +1,10 @@
 @extends('admin.layouts.app')
 
+@section('breadcrumb')
+<li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
+<li class="breadcrumb-item" aria-current="page">Dashboard</li>
+@endsection
+
 @section('content')
 <div class="row">
   <div class="col-md-12">

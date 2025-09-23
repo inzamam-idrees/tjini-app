@@ -13,8 +13,9 @@ class SchoolController extends Controller
      */
     public function index()
     {
+        $title = 'School List';
         $schools = School::all();
-        return view('admin.schools.index', compact('schools'));
+        return view('admin.schools.index', compact('schools', 'title'));
     }
 
     /**
@@ -22,7 +23,8 @@ class SchoolController extends Controller
      */
     public function create()
     {
-        return view('admin.schools.create');
+        $title = 'Create School';
+        return view('admin.schools.create', compact('title'));
     }
 
     /**
@@ -30,8 +32,20 @@ class SchoolController extends Controller
      */
     public function store(Request $request)
     {
-        return view('admin.schools.store');
-    }   
+        // dd($request->all());
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+        ]);
+
+        if (!$validated) {
+            return redirect()->back()->withErrors($validated)->withInput();
+        }
+
+        School::create($validated);
+        return redirect()->route('admin.schools')->with('success', 'School created successfully.');
+    }
 
     /**
      * Handle a show request to the application.
@@ -44,24 +58,44 @@ class SchoolController extends Controller
     /**
      * Handle a edit request to the application.
      */
-    public function edit(School $school)
+    public function edit($id)
     {
-        return view('admin.schools.edit', compact('school'));
+        $title = 'Edit School';
+        $school = School::findOrFail($id);
+        return view('admin.schools.create', compact('school', 'title'));
     }
 
     /**
      * Handle a update request to the application.
      */
-    public function update(Request $request, School $school)
+    public function update(Request $request, $id)
     {
-        return view('admin.schools.update', compact('school'));
+        $school = School::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+        ]);
+        if (!$validated) {
+            return redirect()->back()->withErrors($validated)->withInput();
+        }
+
+        $school->update($validated);
+        return redirect()->route('admin.schools')->with('success', 'School updated successfully.');
     }
 
     /**
      * Handle a destroy request to the application.
      */
-    public function destroy(School $school)
+    public function destroy($id)
     {
-        return view('admin.schools.destroy', compact('school'));
+        $school = School::findOrFail($id);
+        if (!$school) {
+            return redirect()->route('admin.schools')->with('error', 'School not found.');
+        }
+        
+        $school->delete();
+        return redirect()->route('admin.schools')->with('success', 'School deleted successfully.');
     }
 }

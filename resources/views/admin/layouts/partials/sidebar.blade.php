@@ -4,7 +4,7 @@
         <div class="m-header">
             <a href="{{ route('admin.dashboard') }}" class="b-brand text-primary">
                 <!-- ========   Change your logo from here   ============ -->
-                <img src="{{ asset('public/assets/images/logo-dark.svg') }}" class="img-fluid logo-lg" alt="logo">
+                <img src="{{ asset('public/assets/images/tjiniapp-logo-dark.png') }}" class="img-fluid logo-lg" alt="logo">
             </a>
         </div>
         <div class="navbar-content">

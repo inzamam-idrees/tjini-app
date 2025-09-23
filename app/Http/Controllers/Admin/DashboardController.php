@@ -11,6 +11,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        return view('admin.home');
+        $title = 'Dashboard';
+        return view('admin.home', compact('title'));
     }
 }
