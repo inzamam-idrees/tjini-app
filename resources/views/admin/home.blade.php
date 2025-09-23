@@ -2,6 +2,15 @@
 
 @section('content')
 <div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="mb-3">Welcome back, {{ Auth::user()->fullName() }}</h5>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row d-none">
   <!-- [ sample-page ] start -->
   <div class="col-md-6 col-xl-3">
     <div class="card">

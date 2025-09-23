@@ -3,18 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
-
-// Route::get('/', function () {
-//     return view('admin.home');
-// });
-
-// Route::get('/login', function () {
-//     return view('admin.auth.login');
-// });
-
-// Route::get('/dashboard', function () {
-//     return view('admin.home');
-// })->name('dashboard');
+use App\Http\Controllers\Admin\SchoolController;
 
 
 // If someone visits the root URL, redirect to the login page or dashboard.
@@ -36,7 +25,7 @@ Route::middleware('guest')->name('admin.')->group(function () {
 // Routes for authenticated users (dashboard)
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/schools', [DashboardController::class, 'schools'])->name('schools');
+    Route::get('/schools', [SchoolController::class, 'index'])->name('schools');
     Route::get('/parents', [DashboardController::class, 'parents'])->name('parents');
     Route::get('/staff', [DashboardController::class, 'staff'])->name('staff');
 
