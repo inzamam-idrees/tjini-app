@@ -101,6 +101,40 @@ class AuthController extends Controller
     }
 
     /**
+     * API for mobile app: forgot password (no old password required).
+     * User enters email, if verified, can reset password.
+     * POST: email, password, password_confirmation
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'Email not found.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        // If you use email verification, check it here
+        // if (isset($user->email_verified_at) && !$user->email_verified_at) {
+        //     return response()->json([
+        //         'message' => 'Email not verified.'
+        //     ], Response::HTTP_FORBIDDEN);
+        // }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password updated successfully.'
+        ], Response::HTTP_OK);
+    }
+
+    /**
      * Handle user logout.
      */
     public function logout(Request $request)
