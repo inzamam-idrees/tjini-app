@@ -76,6 +76,13 @@
                         </div>
 
                         <div class="form-group row">
+                            <label class="col-lg-4 col-form-label text-lg-end">Relation:</label>
+                            <div class="col-lg-6">
+                                <input type="text" class="form-control" name="relation" id="relation" required value="{{ old('relation', $user->relation ?? '') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
                             <label class="col-lg-4 col-form-label text-lg-end">Child Name:</label>
                             <div class="col-lg-6">
                                 <input type="text" class="form-control" name="child_name" id="child_name" required value="{{ old('child_name', $user->child_name ?? '') }}">
@@ -85,10 +92,10 @@
 
                     @if($role == 'staff')
                         <div class="form-group row">
-                            <label class="col-lg-4 col-form-label text-lg-end">Role:</label>
+                            <label class="col-lg-4 col-form-label text-lg-end">Staff Role:</label>
                             <div class="col-lg-6">
-                                <select class="form-control" name="role" id="role" required>
-                                    <option label="select"></option>
+                                <select class="form-control" name="staff_role" id="staff_role" required>
+                                    <option value="" disabled>Select Role</option>
                                     <option value="viewer" {{ old('role', $user->role ?? '') == 'viewer' ? 'selected' : '' }}>Viewer</option>
                                     <option value="dispatcher" {{ old('role', $user->role ?? '') == 'dispatcher' ? 'selected' : '' }}>Dispatcher</option>
                                 </select>
