@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SchoolController;
-
+use App\Http\Controllers\Admin\UserController;
 
 // If someone visits the root URL, redirect to the login page or dashboard.
 Route::get('/', function () {
@@ -25,19 +25,24 @@ Route::middleware('guest')->group(function () {
 // Routes for authenticated users (dashboard)
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/schools', [SchoolController::class, 'index'])->name('schools');
-    Route::get('/schools/create', [SchoolController::class, 'create'])->name('schools.create');
-    Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
-    Route::get('/schools/{id}/edit', [SchoolController::class, 'edit'])->name('schools.edit');
-    Route::put('/schools/{id}', [SchoolController::class, 'update'])->name('schools.update');
-    Route::delete('/schools/{id}', [SchoolController::class, 'destroy'])->name('schools.destroy');
 
-    Route::get('/parents', [DashboardController::class, 'parents'])->name('parents');
-    Route::get('/staff', [DashboardController::class, 'staff'])->name('staff');
+    Route::prefix('schools')->name('schools.')->group(function () {
+        Route::get('/', [SchoolController::class, 'index'])->name('index');
+        Route::get('/create', [SchoolController::class, 'create'])->name('create');
+        Route::post('/', [SchoolController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [SchoolController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SchoolController::class, 'update'])->name('update');
+        Route::delete('/{id}', [SchoolController::class, 'destroy'])->name('destroy');
+    });
 
-    // Put the rest of your admin routes here.  For example:
-    // Route::resource('/students', StudentController::class);
-    // Route::resource('/teachers', TeacherController::class);
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/{role}', [UserController::class, 'index'])->name('index');
+        Route::get('/{role}/create', [UserController::class, 'create'])->name('create');
+        Route::post('/{role}', [UserController::class, 'store'])->name('store');
+        Route::get('/{role}/{id}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{role}/{id}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{role}/{id}', [UserController::class, 'destroy'])->name('destroy');
+    });
 
     // Logout route
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
