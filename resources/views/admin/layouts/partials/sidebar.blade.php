@@ -20,19 +20,19 @@
                     <label>Modules</label>
                     <i class="ti ti-dashboard"></i>
                 </li>
-                <li class="pc-item">
+                <li class="pc-item {{ request()->is('admin/schools*') ? 'active' : '' }}">
                     <a href="{{ route('admin.schools') }}" class="pc-link">
                         <span class="pc-micon"><i class="ti ti-school"></i></span>
                         <span class="pc-mtext">Schools</span>
                     </a>
                 </li>
-                <li class="pc-item">
+                <li class="pc-item {{ request()->is('admin/parents*') ? 'active' : '' }}">
                     <a href="{{ route('admin.parents') }}" class="pc-link">
                         <span class="pc-micon"><i class="ti ti-user"></i></span>
                         <span class="pc-mtext">Parents</span>
                     </a>
                 </li>
-                <li class="pc-item">
+                <li class="pc-item {{ request()->is('admin/staff*') ? 'active' : '' }}">
                     <a href="{{ route('admin.staff') }}" class="pc-link">
                         <span class="pc-micon"><i class="ti ti-users"></i></span>
                         <span class="pc-mtext">Staff</span>

@@ -15,7 +15,7 @@
           </div>
 
           {{-- Login form --}}
-          <form method="POST" action="{{ route('admin.login.attempt') }}">
+          <form method="POST" action="{{ route('login.attempt') }}">
             @csrf
             <div class="form-group mb-3">
               <label class="form-label">Email Address</label>

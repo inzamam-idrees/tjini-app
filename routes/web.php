@@ -13,11 +13,11 @@ Route::get('/', function () {
     $auth = auth();
     return $auth->check()
         ? redirect()->route('admin.dashboard')
-        : redirect()->route('admin.login');
+        : redirect()->route('login');
 });
 
 // Routes for guests (not logged in)
-Route::middleware('guest')->name('admin.')->group(function () {
+Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
 });
