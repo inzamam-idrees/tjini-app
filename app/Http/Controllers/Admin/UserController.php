@@ -6,20 +6,37 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\School;
+use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
     public function index($role)
     {
         $title = ucfirst($role) . 's';
         $roles = $role == 'staff' ? ['viewer', 'dispatcher'] : [$role];
-        $users = User::role($roles)->get();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            $users = User::role($roles)->get();
+        } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            $users = User::role($roles)->where('school_id', $user->school_id)->get();
+        } else {
+            $users = collect();
+        }
         return view('admin.users.index', compact('users', 'title', 'role'));
     }
 
     public function create($role)
     {
         $title = 'Create ' . ucfirst($role);
-        $schools = School::all();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            $schools = School::all();
+        } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            $schools = School::where('id', $user->school_id)->get();
+        } else {
+            $schools = collect();
+        }
         return view('admin.users.create', compact('schools', 'title', 'role'));
     }
 
@@ -120,9 +137,17 @@ class UserController extends Controller
     public function edit($role, $id)
     {
         $title = 'Edit ' . ucfirst($role);
-        $user = User::find($id);
-        $schools = School::all();
-        return view('admin.users.edit', compact('user', 'schools', 'title', 'role'));
+        $userToEdit = User::find($id);
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            $schools = School::all();
+        } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            $schools = School::where('id', $user->school_id)->get();
+        } else {
+            $schools = collect();
+        }
+        return view('admin.users.edit', compact('userToEdit', 'schools', 'title', 'role'));
     }
 
     /**

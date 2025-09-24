@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\School;
+use Illuminate\Support\Facades\Auth;
 
 class SchoolController extends Controller
 {
@@ -14,7 +15,15 @@ class SchoolController extends Controller
     public function index()
     {
         $title = 'School List';
-        $schools = School::all();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::user();
+        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+            $schools = School::all();
+        } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+            $schools = School::where('id', $user->school_id)->get();
+        } else {
+            $schools = collect();
+        }
         return view('admin.schools.index', compact('schools', 'title'));
     }
 
