@@ -27,14 +27,38 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
+                                <th>School</th>
+                                @if($role === 'parent')
+                                    <th>Relation</th>
+                                    <th>IsPrimary</th>
+                                @endif
+                                @if($role === 'staff')
+                                    <th>Role</th>
+                                @endif
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($users as $user)
                             <tr>
-                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->fullName() }}</td>
                                 <td>{{ $user->email }}</td>
+                                <td>{{ $user->school ? $user->school->name : 'N/A' }}</td>
+                                @if($role === 'parent')
+                                    <td>{{ $user->relation }}</td>
+                                    <td>
+                                        @if($user->is_primary)
+                                            <span class="badge bg-success">True</span>
+                                        @else
+                                            <span class="badge bg-danger">False</span>
+                                        @endif
+                                    </td>
+                                @endif
+                                @if($role === 'staff')
+                                    <td>
+                                        <span class="badge bg-info text-capitalize">{{ $user->roles->first()->name ?? 'N/A' }}</span>
+                                    </td>
+                                @endif
                                 <td>
                                     <a href="{{ route('admin.users.edit', [$role, $user->id]) }}" class="btn btn-primary">Edit</a>
                                     <form action="{{ route('admin.users.destroy', [$role, $user->id]) }}" method="POST" style="display:inline;">

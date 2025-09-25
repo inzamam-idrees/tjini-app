@@ -56,7 +56,7 @@
                         <label class="col-lg-4 col-form-label text-lg-end">School:</label>
                         <div class="col-lg-6">
                             <select class="form-control" name="school_id" id="school_id" required>
-                                <option label="select"></option>
+                                <option value="" disabled selected>Select School</option>
                                 @foreach ($schools as $school)
                                     <option value="{{ $school->id }}" {{ old('school_id', $user->school_id ?? '') == $school->id ? 'selected' : '' }}>{{ $school->name }}</option>
                                 @endforeach
@@ -66,11 +66,12 @@
 
                     @if($role == 'parent')
                         <div class="form-group row align-items-center">
-                            <label class="col-lg-4 col-form-label text-lg-end">Is Primary:</label>
+                            <label class="col-lg-4 col-form-label text-lg-end" for="is_primary">Is Primary:</label>
                             <div class="col-lg-6">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="is_primary" id="is_primary" required>
-                                    <label class="form-check-label" for="is_primary"> Is Primary </label>
+                                    <input type="hidden" name="is_primary" value="0">
+                                    <input class="form-check-input" type="checkbox" name="is_primary" id="is_primary" value="1" {{ old('is_primary', $user->is_primary ?? false) ? 'checked' : '' }}>
+                                    <!-- <label class="form-check-label" for="is_primary"> Is Primary </label> -->
                                 </div>
                             </div>
                         </div>
@@ -78,14 +79,14 @@
                         <div class="form-group row">
                             <label class="col-lg-4 col-form-label text-lg-end">Relation:</label>
                             <div class="col-lg-6">
-                                <input type="text" class="form-control" name="relation" id="relation" required value="{{ old('relation', $user->relation ?? '') }}">
+                                <input type="text" class="form-control" name="relation" id="relation" value="{{ old('relation', $user->relation ?? '') }}">
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <label class="col-lg-4 col-form-label text-lg-end">Child Name:</label>
                             <div class="col-lg-6">
-                                <input type="text" class="form-control" name="child_name" id="child_name" required value="{{ old('child_name', $user->child_name ?? '') }}">
+                                <input type="text" class="form-control" name="child_name" id="child_name" value="{{ old('child_name', $user->child_name ?? '') }}">
                             </div>
                         </div>
                     @endif
@@ -95,9 +96,9 @@
                             <label class="col-lg-4 col-form-label text-lg-end">Staff Role:</label>
                             <div class="col-lg-6">
                                 <select class="form-control" name="staff_role" id="staff_role" required>
-                                    <option value="" disabled>Select Role</option>
-                                    <option value="viewer" {{ old('role', $user->role ?? '') == 'viewer' ? 'selected' : '' }}>Viewer</option>
-                                    <option value="dispatcher" {{ old('role', $user->role ?? '') == 'dispatcher' ? 'selected' : '' }}>Dispatcher</option>
+                                    <option value="" disabled selected>Select Role</option>
+                                    <option value="viewer" {{ old('role', isset($user) ? $user->roles->first()->name : '') == 'viewer' ? 'selected' : '' }}>Viewer</option>
+                                    <option value="dispatcher" {{ old('role', isset($user) ? $user->roles->first()->name : '') == 'dispatcher' ? 'selected' : '' }}>Dispatcher</option>
                                 </select>
                             </div>
                         </div>
@@ -125,7 +126,7 @@
                             <div class="col-lg-6">
                                 <input
                                     type="password"
-                                    name="confirm_password"
+                                    name="password_confirmation"
                                     id="confirm-password"
                                     data-bouncer-match="#password"
                                     class="form-control"

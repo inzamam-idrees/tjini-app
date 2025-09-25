@@ -66,8 +66,8 @@ class UserController extends Controller
         if ($role == 'parent') {
             // Additional parent-specific validation
             $parentValidated = $request->validate([
-                'relation' => 'required|string|max:255',
-                'child_name' => 'required|string|max:255',
+                'relation' => 'nullable|string|max:255',
+                'child_name' => 'nullable|string|max:255',
                 'is_primary' => 'nullable|boolean',
             ]);
 
@@ -137,17 +137,17 @@ class UserController extends Controller
     public function edit($role, $id)
     {
         $title = 'Edit ' . ucfirst($role);
-        $userToEdit = User::find($id);
+        $user = User::find($id);
         /** @var \App\Models\User|null $user */
-        $user = Auth::user();
-        if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+        $authUser = Auth::user();
+        if ($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin')) {
             $schools = School::all();
-        } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
-            $schools = School::where('id', $user->school_id)->get();
+        } elseif ($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('admin')) {
+            $schools = School::where('id', $authUser->school_id)->get();
         } else {
             $schools = collect();
         }
-        return view('admin.users.edit', compact('userToEdit', 'schools', 'title', 'role'));
+        return view('admin.users.create', compact('user', 'schools', 'title', 'role'));
     }
 
     /**
@@ -175,8 +175,8 @@ class UserController extends Controller
 
         if ($role == 'parent') {
             $parentValidated = $request->validate([
-                'relation' => 'required|string|max:255',
-                'child_name' => 'required|string|max:255',
+                'relation' => 'nullable|string|max:255',
+                'child_name' => 'nullable|string|max:255',
                 'is_primary' => 'nullable|boolean',
             ]);
 

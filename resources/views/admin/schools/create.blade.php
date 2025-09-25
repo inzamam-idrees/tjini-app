@@ -3,7 +3,7 @@
 
 @section('breadcrumb')
 <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Home</a></li>
-<li class="breadcrumb-item"><a href="{{ route('admin.schools') }}">Schools</a></li>
+<li class="breadcrumb-item"><a href="{{ route('admin.schools.index') }}">Schools</a></li>
 <li class="breadcrumb-item" aria-current="page">{{ isset($school) ? 'Edit' : 'Create' }}</li>
 @endsection
 

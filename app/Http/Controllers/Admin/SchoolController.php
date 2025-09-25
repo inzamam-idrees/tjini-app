@@ -53,7 +53,7 @@ class SchoolController extends Controller
         }
 
         School::create($validated);
-        return redirect()->route('admin.schools')->with('success', 'School created successfully.');
+        return redirect()->route('admin.schools.index')->with('success', 'School created successfully.');
     }
 
     /**
@@ -91,7 +91,7 @@ class SchoolController extends Controller
         }
 
         $school->update($validated);
-        return redirect()->route('admin.schools')->with('success', 'School updated successfully.');
+        return redirect()->route('admin.schools.index')->with('success', 'School updated successfully.');
     }
 
     /**
@@ -101,10 +101,10 @@ class SchoolController extends Controller
     {
         $school = School::findOrFail($id);
         if (!$school) {
-            return redirect()->route('admin.schools')->with('error', 'School not found.');
+            return redirect()->route('admin.schools.index')->with('error', 'School not found.');
         }
         
         $school->delete();
-        return redirect()->route('admin.schools')->with('success', 'School deleted successfully.');
+        return redirect()->route('admin.schools.index')->with('success', 'School deleted successfully.');
     }
 }
