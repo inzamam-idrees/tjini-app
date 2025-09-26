@@ -20,10 +20,18 @@
                     <label>Modules</label>
                     <i class="ti ti-dashboard"></i>
                 </li>
+                @if(auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
+                <li class="pc-item {{ request()->is('admin/users/admin*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.users.index', 'admin') }}" class="pc-link">
+                        <span class="pc-micon"><i class="ti ti-users"></i></span>
+                        <span class="pc-mtext">School Admins</span>
+                    </a>
+                </li>
+                @endif
                 <li class="pc-item {{ request()->is('admin/schools*') ? 'active' : '' }}">
                     <a href="{{ route('admin.schools.index') }}" class="pc-link">
                         <span class="pc-micon"><i class="ti ti-school"></i></span>
-                        <span class="pc-mtext">Schools</span>
+                        <span class="pc-mtext">School</span>
                     </a>
                 </li>
                 <li class="pc-item {{ request()->is('admin/users/parent*') ? 'active' : '' }}">

@@ -13,12 +13,14 @@
 <div class="row">
     <div class="col-sm-12">
         <div class="card">
-            <div class="card-header">
+                <div class="card-header">
                 <div class="float-start">
                     <h5>Schools</h5>
                     <small>List of all schools</small>
                 </div>
+                @if(auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
                 <a href="{{ route('admin.schools.create') }}" class="btn btn-primary float-end">Add New School</a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="dt-responsive table-responsive">
@@ -39,11 +41,13 @@
                                 <td>{{ $school->end_time }}</td>
                                 <td>
                                     <a href="{{ route('admin.schools.edit', $school->id) }}" class="btn btn-primary">Edit</a>
+                                    @if(auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
                                     <form action="{{ route('admin.schools.destroy', $school->id) }}" method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" class="btn btn-danger btn-delete">Delete</button>
                                     </form>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

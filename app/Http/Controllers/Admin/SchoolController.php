@@ -33,6 +33,11 @@ class SchoolController extends Controller
     public function create()
     {
         $title = 'Create School';
+        $user = Auth::user();
+        // only super_admin can create schools
+        if (!($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
+            abort(403);
+        }
         return view('admin.schools.create', compact('title'));
     }
 
@@ -50,6 +55,11 @@ class SchoolController extends Controller
 
         if (!$validated) {
             return redirect()->back()->withErrors($validated)->withInput();
+        }
+
+        $user = Auth::user();
+        if (!($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
+            abort(403);
         }
 
         School::create($validated);
@@ -71,6 +81,11 @@ class SchoolController extends Controller
     {
         $title = 'Edit School';
         $school = School::findOrFail($id);
+        $user = Auth::user();
+        // super_admin can edit any school; admin can only edit their own school
+        if (!($user && method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || ($user->hasRole('admin') && $user->school_id == $school->id)))) {
+            abort(403);
+        }
         return view('admin.schools.create', compact('school', 'title'));
     }
 
@@ -90,6 +105,12 @@ class SchoolController extends Controller
             return redirect()->back()->withErrors($validated)->withInput();
         }
 
+        $user = Auth::user();
+        // super_admin can update any; admin only their own school
+        if (!($user && method_exists($user, 'hasRole') && ($user->hasRole('super_admin') || ($user->hasRole('admin') && $user->school_id == $school->id)))) {
+            abort(403);
+        }
+
         $school->update($validated);
         return redirect()->route('admin.schools.index')->with('success', 'School updated successfully.');
     }
@@ -103,7 +124,12 @@ class SchoolController extends Controller
         if (!$school) {
             return redirect()->route('admin.schools.index')->with('error', 'School not found.');
         }
-        
+        $user = Auth::user();
+        // only super_admin can delete schools
+        if (!($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin'))) {
+            abort(403);
+        }
+
         $school->delete();
         return redirect()->route('admin.schools.index')->with('success', 'School deleted successfully.');
     }
