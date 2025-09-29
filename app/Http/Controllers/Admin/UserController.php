@@ -138,7 +138,7 @@ class UserController extends Controller
     {
         $title = 'Edit ' . ucfirst($role);
         $user = User::find($id);
-        /** @var \App\Models\User|null $user */
+        /** @var \App\Models\User|null $authUser */
         $authUser = Auth::user();
         if ($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin')) {
             $schools = School::all();
