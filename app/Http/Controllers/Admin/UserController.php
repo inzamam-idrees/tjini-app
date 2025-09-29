@@ -130,6 +130,7 @@ class UserController extends Controller
 
         if ($role == 'admin') {
             // only super admins may create school admins
+            /** @var \App\Models\User|null $authUser */
             $authUser = Auth::user();
             if (!($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin'))) {
                 abort(403);
@@ -258,6 +259,7 @@ class UserController extends Controller
 
         if ($role == 'admin') {
             // only super admins may update school admins
+            /** @var \App\Models\User|null $authUser */
             $authUser = Auth::user();
             if (!($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin'))) {
                 abort(403);
