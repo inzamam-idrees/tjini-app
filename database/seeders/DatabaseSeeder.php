@@ -31,7 +31,7 @@ class DatabaseSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Super',
             'last_name' => 'Admin',
-            'email' => 'superadmin@tjini.com',
+            'email' => 'superadmin@tjiniapp.fr',
             'password' => Hash::make('password'),
         ]);
         $user->assignRole($superAdminRole);
