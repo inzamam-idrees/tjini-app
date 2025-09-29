@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserImportController;
 
 // If someone visits the root URL, redirect to the login page or dashboard.
 Route::get('/', function () {
@@ -42,6 +43,14 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/{role}/{id}/edit', [UserController::class, 'edit'])->name('edit');
         Route::put('/{role}/{id}', [UserController::class, 'update'])->name('update');
         Route::delete('/{role}/{id}', [UserController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('user')->name('user.')->group(function () {
+        // Import routes
+        Route::get('/import', [UserImportController::class, 'showImportForm'])->name('import.form');
+        Route::post('/import', [UserImportController::class, 'import'])->name('import');
+        Route::get('/import/template', [UserImportController::class, 'downloadTemplate'])->name('import.template');
+        Route::get('/import/progress/{batchId}', [UserImportController::class, 'checkProgress'])->name('import.progress');
     });
 
     // Logout route

@@ -13,9 +13,4 @@
     </div>
 </footer>
 
-<!-- [Page Specific JS] start -->
-<script src="{{ asset('public/assets/js/plugins/apexcharts.min.js') }}"></script>
-<script src="{{ asset('public/assets/js/pages/dashboard-default.js') }}"></script>
-<!-- [Page Specific JS] end -->
-
 @include('admin.layouts.partials.footer_script')

@@ -46,6 +46,15 @@
                         <span class="pc-mtext">Staff</span>
                     </a>
                 </li>
+
+                @if(auth()->user() && method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('admin'))
+                <li class="pc-item {{ request()->is('admin/user/import*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.user.import.form') }}" class="pc-link">
+                        <span class="pc-micon"><i class="ti ti-file-import"></i></span>
+                        <span class="pc-mtext">Import Users</span>
+                    </a>
+                </li>
+                @endif
             </ul>
         </div>
     </div>
