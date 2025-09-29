@@ -126,6 +126,13 @@ class AuthController extends Controller
             ], Response::HTTP_NOT_FOUND);
         }
 
+        // Check if user has one of the allowed roles (parent, dispatcher, viewer)
+        if (!$user->hasAnyRole(['parent', 'dispatcher', 'viewer'])) {
+            return response()->json([
+                'message' => 'Access denied. Only parents and school staff can update their password.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         // If you use email verification, check it here
         // if (isset($user->email_verified_at) && !$user->email_verified_at) {
         //     return response()->json([

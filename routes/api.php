@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\NotificationController;
 // Public routes for registration and login
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Protected route for logout (requires authentication)
 Route::middleware('auth:sanctum')->group(function () {
