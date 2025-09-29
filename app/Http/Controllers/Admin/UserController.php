@@ -128,6 +128,34 @@ class UserController extends Controller
             return redirect()->route('admin.users.index', 'staff')->with('success', 'Staff created successfully');
         }
 
+        if ($role == 'admin') {
+            // only super admins may create school admins
+            $authUser = Auth::user();
+            if (!($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin'))) {
+                abort(403);
+            }
+            // Only super_admin should be able to create school admins. The create view already limits schools shown,
+            // but enforce school_id required here and ensure only one admin per school.
+            $adminValidated = $request->validate([
+                'school_id' => 'required|exists:schools,id',
+            ]);
+
+            $schoolId = $adminValidated['school_id'];
+
+            // Ensure there isn't already an admin for this school
+            $existingAdmin = User::role('admin')->where('school_id', $schoolId)->first();
+            if ($existingAdmin) {
+                return redirect()->back()->withInput()->withErrors(['school_id' => 'This school already has an admin.']);
+            }
+
+            $validated['school_id'] = $schoolId;
+
+            $user = User::create($validated);
+            $user->assignRole('admin');
+
+            return redirect()->route('admin.users.index', 'admin')->with('success', 'School admin created successfully');
+        }
+
         // Fallback: treat other roles (if any) as simple role assignment
         $user = User::create($validated);
         $user->assignRole($role);
@@ -226,6 +254,29 @@ class UserController extends Controller
             $user->update($validated);
             $user->syncRoles([$staffValidated['staff_role']]);
             return redirect()->route('admin.users.index', 'staff')->with('success', 'Staff updated successfully');
+        }
+
+        if ($role == 'admin') {
+            // only super admins may update school admins
+            $authUser = Auth::user();
+            if (!($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin'))) {
+                abort(403);
+            }
+            $adminValidated = $request->validate([
+                'school_id' => 'required|exists:schools,id',
+            ]);
+            $schoolId = $adminValidated['school_id'];
+
+            // Ensure there isn't already another admin for this school
+            $existingAdmin = User::role('admin')->where('school_id', $schoolId)->where('id', '!=', $user->id)->first();
+            if ($existingAdmin) {
+                return redirect()->back()->withInput()->withErrors(['school_id' => 'This school already has an admin.']);
+            }
+
+            $validated['school_id'] = $schoolId;
+            $user->update($validated);
+            $user->syncRoles(['admin']);
+            return redirect()->route('admin.users.index', 'admin')->with('success', 'School admin updated successfully');
         }
 
         // Fallback: treat other roles (if any) as simple role assignment
