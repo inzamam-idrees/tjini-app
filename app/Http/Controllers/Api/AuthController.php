@@ -77,6 +77,13 @@ class AuthController extends Controller
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
+            // Check if user has one of the allowed roles (parent, dispatcher, viewer)
+            if (!$user->hasAnyRole(['parent', 'dispatcher', 'viewer'])) {
+                return response()->json([
+                    'message' => 'Access denied. Only parents and school staff can use the mobile app.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
             // Update the device token if provided
             if ($request->device_token) {
                 $user->device_token = $request->device_token;
