@@ -168,7 +168,7 @@
 </div>
 @endsection
 
-@section('script')
+@push('script')
     <script type="text/javascript">
         function updateTemplateLink(role) {
             const link = document.getElementById('templateLink');
@@ -316,4 +316,4 @@
             }
         }
     </script>
-@endsection
+@endpush
