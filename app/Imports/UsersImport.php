@@ -11,11 +11,15 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Validators\Failure;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading, WithBatchInserts
+class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithChunkReading, WithBatchInserts, SkipsOnFailure
 {
+    use SkipsFailures;
     protected $role;
     protected $school_id;
     protected $batch_id;
@@ -44,16 +48,18 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithC
 
     public function collection(Collection $rows)
     {
-        $this->total_rows = count($rows);
+        // Add the number of rows in this chunk to the running total
+        $this->total_rows += count($rows);
         
         foreach ($rows as $index => $row) {
             $this->processed_rows++;
             
             try {
-                // Check for existing email
-                if (User::where('email', $row['email'])->exists()) {
+                // Normalize and check for existing email (case-insensitive)
+                $email = isset($row['email']) ? trim(strtolower($row['email'])) : null;
+                if ($email && User::whereRaw('LOWER(email) = ?', [$email])->exists()) {
                     $this->skip_count++;
-                    $this->logError($index + 2, 'Skipped - Email already exists: ' . $row['email']);
+                    $this->logSkip($index + 2, 'Skipped - Email already exists: ' . $email);
                     continue;
                 }
 
@@ -62,7 +68,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithC
                 $user = User::create([
                     'first_name' => $row['first_name'],
                     'last_name' => $row['last_name'],
-                    'email' => $row['email'],
+                    'email' => $email,
                     'password' => Hash::make($password),
                     'school_id' => $this->school_id,
                     'relation' => $this->role === 'parent' ? ($row['relation'] ?? null) : null,
@@ -81,7 +87,14 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithC
                 $this->logSuccess($index + 2, $user);
 
             } catch (\Exception $e) {
-                $this->logError($index + 2, $e->getMessage());
+                $msg = $e->getMessage();
+                // Treat DB duplicate / unique constraint errors as skipped rows
+                if (stripos($msg, 'duplicate') !== false || stripos($msg, '1062') !== false || stripos($msg, 'unique') !== false) {
+                    $this->skip_count++;
+                    $this->logSkip($index + 2, 'Skipped - duplicate entry for email: ' . ($email ?? '')); 
+                } else {
+                    $this->logError($index + 2, $msg);
+                }
             }
 
             // Update progress after each row
@@ -92,11 +105,43 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithC
         $this->storeFinalResults();
     }
 
+    /**
+     * Handle row validation failures (SkipsOnFailure)
+     * Count the failed row as part of the total and mark it as skipped with the failure messages.
+     */
+    public function onFailure(Failure ...$failures)
+    {
+        foreach ($failures as $failure) {
+            // Count this failed row in totals and skipped, and mark it processed
+            $this->total_rows += 1;
+            $this->processed_rows += 1;
+            $this->skip_count += 1;
+
+            $errors = is_array($failure->errors()) ? implode('; ', $failure->errors()) : (string) $failure->errors();
+            $rowNumber = $failure->row();
+
+            $this->logSkip($rowNumber, 'Validation failed: ' . $errors);
+        }
+
+        // Update cache so UI can pick up progress for validation failures too
+        $this->updateProgress();
+    }
+
     protected function logError($row, $message)
     {
         $this->error_logs[] = [
             'row' => $row,
             'type' => 'error',
+            'message' => $message,
+            'timestamp' => now()
+        ];
+    }
+
+    protected function logSkip($row, $message)
+    {
+        $this->error_logs[] = [
+            'row' => $row,
+            'type' => 'skipped',
             'message' => $message,
             'timestamp' => now()
         ];
@@ -119,7 +164,7 @@ class UsersImport implements ToCollection, WithHeadingRow, WithValidation, WithC
             'processed' => $this->processed_rows,
             'success' => $this->success_count,
             'skipped' => $this->skip_count,
-            'percentage' => ($this->processed_rows / $this->total_rows) * 100
+            'percentage' => $this->total_rows > 0 ? ($this->processed_rows / $this->total_rows) * 100 : 0
         ];
 
         Cache::put("import_progress_{$this->batch_id}", $progress, now()->addHours(1));

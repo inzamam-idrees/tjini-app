@@ -20,14 +20,54 @@ class UserImportController extends Controller
 
     public function import(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'message' => 'Import started successfully'
-        ]);
+        // Validate role first
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
             'role' => 'required|in:parent,viewer,dispatcher',
         ]);
+
+        // Basic file presence check
+        if (!$request->hasFile('file')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No file was uploaded. Please attach a CSV or Excel file.'
+            ], 422);
+        }
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $ext = strtolower($file->getClientOriginalExtension() ?? '');
+        $mime = $file->getClientMimeType();
+
+        // Common allowed extensions and MIME types for Excel/CSV
+        $allowedExt = ['xlsx', 'xls', 'csv'];
+        $allowedMimes = [
+            'text/csv',
+            'text/plain',
+            'application/csv',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/octet-stream'
+        ];
+
+        $extOk = in_array($ext, $allowedExt);
+        $mimeOk = in_array(strtolower($mime), $allowedMimes);
+
+        // Sometimes browsers send wrong mime or extension is missing; try to infer from filename
+        if (!$extOk) {
+            $nameParts = explode('.', $originalName);
+            $maybeExt = strtolower(end($nameParts));
+            if (in_array($maybeExt, $allowedExt)) {
+                $ext = $maybeExt;
+                $extOk = true;
+            }
+        }
+
+        if (!($extOk || $mimeOk)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Invalid file type. Detected extension: .{$ext} (original name: {$originalName}), mime: {$mime}. Allowed: xlsx, xls, csv."
+            ], 422);
+        }
 
         try {
             $school_id = Auth::user()->school_id;
