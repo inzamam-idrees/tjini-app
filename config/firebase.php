@@ -10,5 +10,5 @@ return [
     | your .env file as FIREBASE_CREDENTIALS. Example: storage/app/firebase.json
     |
     */
-    'credentials' => env('FIREBASE_CREDENTIALS', null),
+    'credentials' => env('FIREBASE_CREDENTIALS', storage_path('app/firebase/tjini-app-firebase-credentials.json')),
 ];
