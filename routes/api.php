@@ -16,8 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/logout', [AuthController::class, 'logout']);
-    // Parent response endpoint: authenticated parents call this to notify viewers/dispatchers
-    Route::post('/parent/respond', [NotificationController::class, 'parentRespond']);
+    // Unified notification endpoint for parent and dispatcher actions
+    Route::post('/notify/users', [NotificationController::class, 'notifyUsers']);
 });
 
 Route::get('/test', function (Request $request) {
