@@ -23,7 +23,7 @@ class NotificationController extends Controller
     public function notifyUsers(Request $request, FirebaseNotificationService $firebase)
     {
         $payload = $request->all();
-        $fromId = $payload['from'] ?? null;
+        $fromId = $payload['fromUserId'] ?? null;
         if (!$fromId) {
             return response()->json(['message' => 'Missing from userId'], 422);
         }
@@ -38,19 +38,19 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User has no school assigned'], 422);
         }
 
-        // Parent sending: notify all dispatchers of their school
+        // Parent sending: notify all dispatchers and viewers of their school
         if ($fromUser->hasRole('parent')) {
-            $receivers = User::role('dispatcher')->where('school_id', $schoolId)->get();
+            $receivers = User::role(['viewer', 'dispatcher'])->where('school_id', $schoolId)->get();
             $tokens = $receivers->pluck('device_token')->filter()->unique()->values()->all();
             if (empty($tokens)) {
-                return response()->json(['message' => 'No dispatchers to notify'], 200);
+                return response()->json(['message' => 'No viewers/dispatchers to notify'], 200);
             }
             $firebase->sendToTokens($tokens, $payload['type'] ?? 'Parent', $payload['message'] ?? '', [
-                'from' => $fromId,
+                'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
             ]);
-            return response()->json(['message' => 'Notified dispatchers'], 200);
+            return response()->json(['message' => 'Notified viewers and dispatchers'], 200);
         }
 
         // Dispatcher sending: notify parents (all or primary)
@@ -66,7 +66,7 @@ class NotificationController extends Controller
                 return response()->json(['message' => 'No parents to notify'], 200);
             }
             $firebase->sendToTokens($tokens, $payload['type'] ?? 'Dispatcher', $payload['message'] ?? '', [
-                'from' => $fromId,
+                'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
             ]);
