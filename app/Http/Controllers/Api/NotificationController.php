@@ -28,7 +28,7 @@ class NotificationController extends Controller
         $notifications = Notification::with('fromUser')
             ->where('school_id', $user->school_id)
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
 
         return response()->json($notifications);
     }
