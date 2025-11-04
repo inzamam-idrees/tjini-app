@@ -5,10 +5,33 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Notification;
 use App\Services\FirebaseNotificationService;
+use Illuminate\Http\Response;
 
 class NotificationController extends Controller
 {
+    /**
+     * List notifications for a school (dispatcher/viewer access)
+     */
+    public function listNotifications(Request $request)
+    {
+        $user = $request->user();
+        if (!$user || !$user->hasAnyRole(['dispatcher', 'viewer'])) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->school_id) {
+            return response()->json(['message' => 'No school assigned'], Response::HTTP_FORBIDDEN);
+        }
+
+        $notifications = Notification::with('fromUser')
+            ->where('school_id', $user->school_id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($notifications);
+    }
     /**
      * Unified notification endpoint for parent and dispatcher actions.
      *
@@ -37,6 +60,16 @@ class NotificationController extends Controller
         if (!$schoolId) {
             return response()->json(['message' => 'User has no school assigned'], 422);
         }
+
+        // Save notification in database
+        $notification = Notification::create([
+            'from_user_id' => $fromId,
+            'type' => $payload['type'] ?? '',
+            'message' => $payload['message'] ?? '',
+            'school_id' => $schoolId,
+            'all_parents' => $payload['allParents'] ?? false,
+            'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
+        ]);
 
         // Parent sending: notify all dispatchers and viewers of their school
         if ($fromUser->hasRole('parent')) {
