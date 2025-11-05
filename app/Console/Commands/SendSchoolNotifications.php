@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\FirebaseNotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class SendSchoolNotifications extends Command
 {
@@ -27,11 +28,12 @@ class SendSchoolNotifications extends Command
 
     public function handle(FirebaseNotificationService $firebase)
     {
-    $thresholdOption = $this->option('threshold');
-    $threshold = $thresholdOption !== null ? (int) $thresholdOption : (int) env('SCHOOL_NOTIFY_THRESHOLD', 30);
+        $thresholdOption = $this->option('threshold');
+        $threshold = $thresholdOption !== null ? (int) $thresholdOption : (int) env('SCHOOL_NOTIFY_THRESHOLD', 30);
         $now = Carbon::now();
 
         $this->info('Running school notifications at ' . $now->toDateTimeString());
+        // Log::info('Running school notifications at ' . $now->toDateTimeString());
 
         $schools = School::all();
         foreach ($schools as $school) {
@@ -68,6 +70,7 @@ class SendSchoolNotifications extends Command
             }
         }
 
+        $this->info("No Notifications to send at this time.");
         return 0;
     }
 
@@ -80,7 +83,7 @@ class SendSchoolNotifications extends Command
             return;
         }
 
-        $firebase->sendToTokens($tokens, $title, $body, ['school_id' => (string)$school->id]);
+        $firebase->sendToTokens($tokens, $title, $body, ['school_id' => (string)$school->id, 'cron' => 'school_notifications']);
         $this->info('Sent to parents of school ' . $school->id . ': ' . count($tokens) . ' tokens');
     }
 }
