@@ -61,16 +61,6 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User has no school assigned'], 422);
         }
 
-        // Save notification in database
-        $notification = Notification::create([
-            'from_user_id' => $fromId,
-            'type' => $payload['type'] ?? '',
-            'message' => $payload['message'] ?? '',
-            'school_id' => $schoolId,
-            'all_parents' => $payload['allParents'] ?? false,
-            'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
-        ]);
-
         // Parent sending: notify all dispatchers and viewers of their school
         if ($fromUser->hasRole('parent')) {
             $receivers = User::role(['viewer', 'dispatcher'])->where('school_id', $schoolId)->get();
@@ -82,6 +72,15 @@ class NotificationController extends Controller
                 'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
+            ]);
+            // Save notification in database
+            $notification = Notification::create([
+                'from_user_id' => $fromId,
+                'type' => $payload['type'] ?? '',
+                'message' => $payload['message'] ?? '',
+                'value' => $payload['value'] ?? '',
+                'school_id' => $schoolId,
+                'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
             ]);
             return response()->json(['message' => 'Notified viewers and dispatchers'], 200);
         }

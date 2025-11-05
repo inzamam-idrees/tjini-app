@@ -11,6 +11,7 @@ class Notification extends Model
         'from_user_id',
         'type',
         'message',
+        'value',
         'school_id',
         'all_parents',
         'sender_role'
