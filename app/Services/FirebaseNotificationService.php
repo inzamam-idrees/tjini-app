@@ -82,7 +82,7 @@ class FirebaseNotificationService
         }
 
         $message = CloudMessage::withTarget('token', $token)
-            ->withNotification(['title' => $title, 'body' => $body])
+            ->withNotification(['title' => ucwords(str_replace('-', ' ', $title)), 'body' => $body])
             ->withData($sanitizedData);
 
         try {

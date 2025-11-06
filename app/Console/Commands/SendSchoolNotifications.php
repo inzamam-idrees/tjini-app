@@ -55,7 +55,9 @@ class SendSchoolNotifications extends Command
                 $cacheKey = "school:{$school->id}:start:" . $targetStart->toDateString();
                 // add returns true only if the key did not exist; keep it for 24 hours
                 if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
-                    $this->sendToParents($school, $firebase, 'school-start', "School {$school->name} is about to start at {$school->start_time}");
+                    $type = 'school-start';
+                    $message = "School {$school->name} is about to start at {$school->start_time}";
+                    $this->sendToParents($school, $firebase, $type, $message);
                 } else {
                     $this->info("Start notification already sent for school {$school->id} today");
                 }
@@ -64,7 +66,9 @@ class SendSchoolNotifications extends Command
             if ($now->format('Y-m-d H:i') === $targetEnd->format('Y-m-d H:i')) {
                 $cacheKey = "school:{$school->id}:end:" . $targetEnd->toDateString();
                 if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
-                    $this->sendToParents($school, $firebase, 'school-end', "School {$school->name} is about to end at {$school->end_time}");
+                    $type = 'school-end';
+                    $message = "School {$school->name} is about to end at {$school->end_time}";
+                    $this->sendToParents($school, $firebase, $type, $message);
                 } else {
                     $this->info("End notification already sent for school {$school->id} today");
                 }
