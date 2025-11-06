@@ -40,15 +40,29 @@ class SendSchoolNotifications extends Command
         foreach ($schools as $school) {
             // Build times for today
             try {
-                $start = Carbon::createFromFormat('H:i', $school->start_time)->setDate($now->year, $now->month, $now->day);
-                $end = Carbon::createFromFormat('H:i', $school->end_time)->setDate($now->year, $now->month, $now->day);
+                $this->info('Raw start_time: ' . var_export($school->start_time, true));
+                $this->info('Raw end_time: ' . var_export($school->end_time, true));
+                
+                // Strip any seconds from the time
+                $startTime = substr($school->start_time, 0, 5);
+                $endTime = substr($school->end_time, 0, 5);
+                
+                $this->info('Formatted start_time: ' . $startTime);
+                $this->info('Formatted end_time: ' . $endTime);
+                
+                $start = Carbon::createFromFormat('H:i', $startTime)->setDate($now->year, $now->month, $now->day);
+                $this->info('Start DateTime: ' . $start);
+                $end = Carbon::createFromFormat('H:i', $endTime)->setDate($now->year, $now->month, $now->day);
+                $this->info('End DateTime: ' . $end);
             } catch (\Exception $e) {
+                $this->error("Invalid time format for school {$school->id}: " . $e->getMessage());
                 continue;
             }
 
             // Target times: exactly threshold minutes before start and end
             $targetStart = $start->copy()->subMinutes($threshold);
             $targetEnd = $end->copy()->subMinutes($threshold);
+            $this->info("Now Time {$now->format('Y-m-d H:i')}, School {$school->id} Start Target {$targetStart->format('Y-m-d H:i')}, End Target {$targetEnd->format('Y-m-d H:i')}");
 
             // Compare by minute to trigger only once (cron should run at least once per minute)
             if ($now->format('Y-m-d H:i') === $targetStart->format('Y-m-d H:i')) {
