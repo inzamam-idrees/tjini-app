@@ -17,7 +17,22 @@ class NotificationController extends Controller
     public function listNotifications(Request $request)
     {
         $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['dispatcher', 'viewer'])) {
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        // If the requesting user is a parent, return only notifications they created (their own)
+        if ($user->hasRole('parent')) {
+            $notifications = Notification::with('fromUser')
+                ->where('from_user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json($notifications);
+        }
+
+        // Only dispatcher/viewer may request all school notifications
+        if (!$user->hasAnyRole(['dispatcher', 'viewer'])) {
             return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -101,6 +116,15 @@ class NotificationController extends Controller
                 'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
+            ]);
+            // Save notification in database
+            $notification = Notification::create([
+                'from_user_id' => $fromId,
+                'type' => $payload['type'] ?? '',
+                'message' => $payload['message'] ?? '',
+                'value' => $payload['value'] ?? '',
+                'school_id' => $schoolId,
+                'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
             ]);
             return response()->json(['message' => 'Notified parents'], 200);
         }
