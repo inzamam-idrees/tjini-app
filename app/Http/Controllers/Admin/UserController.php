@@ -37,7 +37,17 @@ class UserController extends Controller
         } else {
             $schools = collect();
         }
-        return view('admin.users.create', compact('schools', 'title', 'role'));
+        // prepare primary parent users (used to populate the primary-parent select)
+        $primaryParents = collect();
+        if ($role == 'parent') {
+            if ($user && method_exists($user, 'hasRole') && $user->hasRole('super_admin')) {
+                $primaryParents = User::role('parent')->where('is_primary', true)->get();
+            } elseif ($user && method_exists($user, 'hasRole') && $user->hasRole('admin')) {
+                $primaryParents = User::role('parent')->where('is_primary', true)->where('school_id', $user->school_id)->get();
+            }
+        }
+
+        return view('admin.users.create', compact('schools', 'title', 'role', 'primaryParents'));
     }
 
     public function store(Request $request, $role)
@@ -65,13 +75,22 @@ class UserController extends Controller
 
         if ($role == 'parent') {
             // Additional parent-specific validation
-            $parentValidated = $request->validate([
+            // If is_primary is unchecked (false) then primary_parent_id is required.
+            $isPrimary = $request->boolean('is_primary');
+            $parentRules = [
                 'relation' => 'nullable|string|max:255',
                 'child_name' => 'nullable|string|max:255',
                 'is_primary' => 'nullable|boolean',
-            ]);
+            ];
+            if ($isPrimary) {
+                $parentRules['primary_parent_id'] = 'nullable|exists:users,id';
+            } else {
+                $parentRules['primary_parent_id'] = 'required|exists:users,id';
+            }
 
-            $childName = $parentValidated['child_name'];
+            $parentValidated = $request->validate($parentRules);
+
+            $childName = $parentValidated['child_name'] ?? null;
             $schoolId = $request->input('school_id');
 
             // Count existing parents for this child (limit to same school if provided)
@@ -89,7 +108,8 @@ class UserController extends Controller
             }
 
             // If marking this parent as primary, unset primary for other parents of same child
-            $isPrimary = filter_var($parentValidated['is_primary'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            // Normalize is_primary to boolean
+            $isPrimary = filter_var($parentValidated['is_primary'] ?? $isPrimary, FILTER_VALIDATE_BOOLEAN);
             if ($isPrimary) {
                 $demoteQuery = User::role('parent')->where('child_name', $childName);
                 if ($schoolId) {
@@ -101,9 +121,13 @@ class UserController extends Controller
             }
 
             // Merge parent-specific fields into validated data for create
-            $validated['relation'] = $parentValidated['relation'];
+            $validated['relation'] = $parentValidated['relation'] ?? null;
             $validated['child_name'] = $childName;
             $validated['is_primary'] = $isPrimary;
+            // include primary_parent_id when provided
+            if (array_key_exists('primary_parent_id', $parentValidated)) {
+                $validated['primary_parent_id'] = $parentValidated['primary_parent_id'];
+            }
 
             // Create user and assign parent role
             $user = User::create($validated);
@@ -176,7 +200,17 @@ class UserController extends Controller
         } else {
             $schools = collect();
         }
-        return view('admin.users.create', compact('user', 'schools', 'title', 'role'));
+        // prepare primary parent users for the edit view as well
+        $primaryParents = collect();
+        if ($role == 'parent') {
+            if ($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('super_admin')) {
+                $primaryParents = User::role('parent')->where('is_primary', true)->get();
+            } elseif ($authUser && method_exists($authUser, 'hasRole') && $authUser->hasRole('admin')) {
+                $primaryParents = User::role('parent')->where('is_primary', true)->where('school_id', $authUser->school_id)->get();
+            }
+        }
+
+        return view('admin.users.create', compact('user', 'schools', 'title', 'role', 'primaryParents'));
     }
 
     /**
@@ -203,13 +237,22 @@ class UserController extends Controller
         }
 
         if ($role == 'parent') {
-            $parentValidated = $request->validate([
+            // Conditional validation: primary_parent_id required when is_primary is false
+            $isPrimary = $request->boolean('is_primary');
+            $parentRules = [
                 'relation' => 'nullable|string|max:255',
                 'child_name' => 'nullable|string|max:255',
                 'is_primary' => 'nullable|boolean',
-            ]);
+            ];
+            if ($isPrimary) {
+                $parentRules['primary_parent_id'] = 'nullable|exists:users,id';
+            } else {
+                $parentRules['primary_parent_id'] = 'required|exists:users,id';
+            }
 
-            $childName = $parentValidated['child_name'];
+            $parentValidated = $request->validate($parentRules);
+
+            $childName = $parentValidated['child_name'] ?? null;
             $schoolId = $request->input('school_id');
 
             // Count existing parents for this child (excluding this user)
@@ -224,8 +267,8 @@ class UserController extends Controller
                 return redirect()->back()->withInput()->withErrors(['child_name' => 'Maximum of 3 parents allowed for this child']);
             }
 
-            // If marking this parent as primary, unset primary for other parents of same child
-            $isPrimary = filter_var($parentValidated['is_primary'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            // Normalize is_primary to boolean (prefer validated value if present)
+            $isPrimary = filter_var($parentValidated['is_primary'] ?? $isPrimary, FILTER_VALIDATE_BOOLEAN);
             if ($isPrimary) {
                 $demoteQuery = User::role('parent')->where('child_name', $childName)->where('id', '!=', $user->id);
                 if ($schoolId) {
@@ -236,9 +279,12 @@ class UserController extends Controller
                 $demoteQuery->update(['is_primary' => false]);
             }
 
-            $validated['relation'] = $parentValidated['relation'];
+            $validated['relation'] = $parentValidated['relation'] ?? null;
             $validated['child_name'] = $childName;
             $validated['is_primary'] = $isPrimary;
+            if (array_key_exists('primary_parent_id', $parentValidated)) {
+                $validated['primary_parent_id'] = $parentValidated['primary_parent_id'];
+            }
 
             $user->update($validated);
             $user->syncRoles(['parent']);

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('school_id')->nullable()->constrained('schools')->onDelete('cascade');
             // $table->enum('role', ['super-admin', 'admin', 'dispatcher', 'viewer', 'parent', 'staff']);
             $table->boolean('is_primary')->nullable(); // for parent
+            $table->foreignId('primary_parent_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('relation')->nullable();
             $table->string('child_name')->nullable();
             $table->string('device_token')->nullable(); // for Firebase

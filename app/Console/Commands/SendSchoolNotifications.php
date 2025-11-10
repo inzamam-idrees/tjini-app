@@ -95,26 +95,29 @@ class SendSchoolNotifications extends Command
 
     protected function sendToParents(School $school, FirebaseNotificationService $firebase, string $title, string $body)
     {
-        $parents = User::role('parent')->where('school_id', $school->id)->get();
+        $parents = User::role('parent')->where('school_id', $school->id)->where('is_primary', true)->get();
         $tokens = $parents->pluck('device_token')->filter()->unique()->values()->all();
         if (empty($tokens)) {
-            $this->info("No parent tokens for school {$school->id}");
+            $this->info("No primary parent tokens for school {$school->id}");
             return;
         }
 
         $firebase->sendToTokens($tokens, $title, $body, ['school_id' => (string)$school->id, 'cron' => 'school_notifications']);
-        $this->info('Sent to parents of school ' . $school->id . ': ' . count($tokens) . ' tokens');
+        $this->info('Sent to primary parents of school ' . $school->id . ': ' . count($tokens) . ' tokens');
         // Delete any existing notifications of this type for the school to avoid clutter
         Notification::where('school_id', $school->id)->delete();
         // Save new initial notification record
         $fromId = User::role('admin')->where('school_id', $school->id)->first()->id ?? null;
-        Notification::create([
-            'from_user_id' => $fromId,
-            'type' => $title,
-            'message' => $body,
-            'value' => $title == 'school-start' ? $school->start_time : $school->end_time,
-            'school_id' => $school->id,
-            'sender_role' => 'admin'
-        ]);
+        foreach ($parents as $parent) {
+            Notification::create([
+                'from_user_id' => $fromId,
+                'type' => $title,
+                'message' => $body,
+                'value' => $title == 'school-start' ? $school->start_time : $school->end_time,
+                'school_id' => $school->id,
+                'to_user_id' => $parent->id,
+                'sender_role' => 'admin'
+            ]);
+        }
     }
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('message');
             $table->string('value')->nullable();
             $table->foreignId('school_id')->constrained('schools')->onDelete('cascade');
+            $table->foreignId('to_user_id')->constrained('users')->onDelete('cascade');
             $table->boolean('all_parents')->default(false);
             $table->string('sender_role'); // parent, dispatcher, viewer
             $table->timestamps();

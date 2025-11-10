@@ -76,6 +76,21 @@
                             </div>
                         </div>
 
+                        <div class="form-group row" id="primary-parent-row" style="{{ old('is_primary', $user->is_primary ?? false) ? 'display:none;' : '' }}">
+                            <label class="col-lg-4 col-form-label text-lg-end">Primary Parent User:</label>
+                            <div class="col-lg-6">
+                                <select class="form-control" name="primary_parent_id" id="primary_parent_id">
+                                    <option value="">Select Primary Parent</option>
+                                    @isset($primaryParents)
+                                        @foreach($primaryParents as $pp)
+                                            <option value="{{ $pp->id }}" {{ old('primary_parent_id') == $pp->id ? 'selected' : '' }}>{{ $pp->first_name }} {{ $pp->last_name }} ({{ $pp->email }})</option>
+                                        @endforeach
+                                    @endisset
+                                </select>
+                                <small class="form-text text-muted">Choose an existing primary parent (if applicable).</small>
+                            </div>
+                        </div>
+
                         <div class="form-group row">
                             <label class="col-lg-4 col-form-label text-lg-end">Relation:</label>
                             <div class="col-lg-6">
@@ -155,4 +170,19 @@
 @push('scripts')
 <script src="{{ asset('public/assets/js/plugins/bouncer.min.js') }}"></script>
 <script src="{{ asset('public/assets/js/pages/form-validation.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var isPrimary = document.getElementById('is_primary');
+        var primaryRow = document.getElementById('primary-parent-row');
+        function togglePrimaryRow() {
+            if (!isPrimary || !primaryRow) return;
+            primaryRow.style.display = isPrimary.checked ? 'none' : '';
+        }
+        if (isPrimary) {
+            isPrimary.addEventListener('change', togglePrimaryRow);
+            // initialize
+            togglePrimaryRow();
+        }
+    });
+</script>
 @endpush

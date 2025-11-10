@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'school_id',
         'is_primary',
+        'primary_parent_id',
         'relation',
         'child_name',
         'device_token',

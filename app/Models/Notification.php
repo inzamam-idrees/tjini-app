@@ -13,6 +13,7 @@ class Notification extends Model
         'message',
         'value',
         'school_id',
+        'to_user_id',
         'all_parents',
         'sender_role'
     ];

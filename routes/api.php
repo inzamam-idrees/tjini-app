@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ParentController;
 use App\Models\User;
 
 // Public routes for registration and login
@@ -22,6 +23,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Unified notification endpoint for parent and dispatcher actions
     Route::post('/notify/users', [NotificationController::class, 'notifyUsers']);
     Route::get('/notifications', [NotificationController::class, 'listNotifications']);
+    // Related parents lookup
+    Route::post('/parents/related', [ParentController::class, 'relatedParents']);
 });
 
 Route::get('/test', function (Request $request) {

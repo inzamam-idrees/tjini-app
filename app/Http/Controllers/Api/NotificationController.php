@@ -76,6 +76,43 @@ class NotificationController extends Controller
             return response()->json(['message' => 'User has no school assigned'], 422);
         }
 
+        // If a specific recipient is provided, send only to that user
+        if (isset($payload['toUserId'])) {
+            $toId = $payload['toUserId'];
+            $receiver = User::find($toId);
+            if (!$receiver) {
+                return response()->json(['message' => 'Recipient not found'], 404);
+            }
+            // Prevent cross-school notifications
+            if ($receiver->school_id != $schoolId) {
+                return response()->json(['message' => 'Recipient is not in the same school'], 422);
+            }
+
+            $tokens = $receiver->device_token ? [$receiver->device_token] : [];
+            if (empty($tokens)) {
+                return response()->json(['message' => 'Recipient has no device token'], 200);
+            }
+
+            $firebase->sendToTokens($tokens, $payload['type'] ?? 'Notification', $payload['message'] ?? '', [
+                'fromUserId' => $fromId,
+                'type' => $payload['type'] ?? '',
+                'message' => $payload['message'] ?? '',
+            ]);
+
+            // Save notification in database for the single recipient
+            Notification::create([
+                'from_user_id' => $fromId,
+                'type' => $payload['type'] ?? '',
+                'message' => $payload['message'] ?? '',
+                'value' => $payload['value'] ?? '',
+                'school_id' => $schoolId,
+                'to_user_id' => $receiver->id,
+                'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
+            ]);
+
+            return response()->json(['message' => 'Notified user'], 200);
+        }
+
         // Parent sending: notify all dispatchers and viewers of their school
         if ($fromUser->hasRole('parent')) {
             $receivers = User::role(['viewer', 'dispatcher'])->where('school_id', $schoolId)->get();
@@ -88,15 +125,18 @@ class NotificationController extends Controller
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
             ]);
-            // Save notification in database
-            $notification = Notification::create([
-                'from_user_id' => $fromId,
-                'type' => $payload['type'] ?? '',
-                'message' => $payload['message'] ?? '',
-                'value' => $payload['value'] ?? '',
-                'school_id' => $schoolId,
-                'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
-            ]);
+            foreach ($receivers as $receiver) {
+                // Save notification in database
+                Notification::create([
+                    'from_user_id' => $fromId,
+                    'type' => $payload['type'] ?? '',
+                    'message' => $payload['message'] ?? '',
+                    'value' => $payload['value'] ?? '',
+                    'school_id' => $schoolId,
+                    'to_user_id' => $receiver->id,
+                    'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
+                ]);
+            }
             return response()->json(['message' => 'Notified viewers and dispatchers'], 200);
         }
 
@@ -117,15 +157,19 @@ class NotificationController extends Controller
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
             ]);
-            // Save notification in database
-            $notification = Notification::create([
-                'from_user_id' => $fromId,
-                'type' => $payload['type'] ?? '',
-                'message' => $payload['message'] ?? '',
-                'value' => $payload['value'] ?? '',
-                'school_id' => $schoolId,
-                'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
-            ]);
+
+            foreach ($parents as $parent) {
+                // Save notification in database
+                Notification::create([
+                    'from_user_id' => $fromId,
+                    'type' => $payload['type'] ?? '',
+                    'message' => $payload['message'] ?? '',
+                    'value' => $payload['value'] ?? '',
+                    'school_id' => $schoolId,
+                    'to_user_id' => $parent->id,
+                    'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
+                ]);
+            }
             return response()->json(['message' => 'Notified parents'], 200);
         }
 
