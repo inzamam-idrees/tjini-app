@@ -23,7 +23,7 @@ class NotificationController extends Controller
 
         // If the requesting user is a parent, return only notifications they created (their own)
         if ($user->hasRole('parent')) {
-            $notifications = Notification::with('fromUser')
+            $notifications = Notification::with(['fromUser', 'toUser'])
                 ->where('from_user_id', $user->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -40,7 +40,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'No school assigned'], Response::HTTP_FORBIDDEN);
         }
 
-        $notifications = Notification::with('fromUser')
+        $notifications = Notification::with(['fromUser', 'toUser'])
             ->where('school_id', $user->school_id)
             ->orderBy('created_at', 'desc')
             ->get();

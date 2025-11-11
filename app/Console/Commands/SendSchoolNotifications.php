@@ -31,7 +31,9 @@ class SendSchoolNotifications extends Command
     {
         $thresholdOption = $this->option('threshold');
         $threshold = $thresholdOption !== null ? (int) $thresholdOption : (int) env('SCHOOL_NOTIFY_THRESHOLD', 30);
-        $now = Carbon::now();
+        // Use the application timezone (set in config/app.php) so Carbon::now() reflects UTC+1 (or DST-adjusted)
+        $timezone = config('app.timezone');
+        $now = Carbon::now($timezone);
 
         $this->info('Running school notifications at ' . $now->toDateTimeString());
         // Log::info('Running school notifications at ' . $now->toDateTimeString());
@@ -50,9 +52,10 @@ class SendSchoolNotifications extends Command
                 $this->info('Formatted start_time: ' . $startTime);
                 $this->info('Formatted end_time: ' . $endTime);
                 
-                $start = Carbon::createFromFormat('H:i', $startTime)->setDate($now->year, $now->month, $now->day);
+                // Create times using the app timezone so comparisons are consistent
+                $start = Carbon::createFromFormat('H:i', $startTime, $timezone)->setDate($now->year, $now->month, $now->day);
                 $this->info('Start DateTime: ' . $start);
-                $end = Carbon::createFromFormat('H:i', $endTime)->setDate($now->year, $now->month, $now->day);
+                $end = Carbon::createFromFormat('H:i', $endTime, $timezone)->setDate($now->year, $now->month, $now->day);
                 $this->info('End DateTime: ' . $end);
             } catch (\Exception $e) {
                 $this->error("Invalid time format for school {$school->id}: " . $e->getMessage());

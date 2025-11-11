@@ -27,6 +27,11 @@ class Notification extends Model
         return $this->belongsTo(User::class, 'from_user_id');
     }
 
+    public function toUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'to_user_id');
+    }
+
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
