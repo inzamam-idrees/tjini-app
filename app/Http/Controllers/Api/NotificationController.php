@@ -6,11 +6,41 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Dispatchee;
 use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Response;
 
 class NotificationController extends Controller
 {
+    /**
+     * List notifications for a secondary parent
+     */
+    public function listSecondaryParentNotifications(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->hasRole('parent')) {
+            return response()->json(['message' => 'User is not a parent'], Response::HTTP_FORBIDDEN);
+        }
+
+        if ($user->is_primary) {
+            return response()->json(['message' => 'User is not a secondary parent'], Response::HTTP_FORBIDDEN);
+        }
+
+        // If the requesting user is a parent, return only notifications their transfers
+        $notifications = Notification::with(['fromUser', 'toUser'])
+            ->where(function ($q) use ($user) {
+                $q->where('to_user_id', $user->id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($notifications);
+    }
+
     /**
      * List notifications for a school (dispatcher/viewer access)
      */
@@ -24,7 +54,13 @@ class NotificationController extends Controller
         // If the requesting user is a parent, return only notifications they created (their own)
         if ($user->hasRole('parent')) {
             $notifications = Notification::with(['fromUser', 'toUser'])
-                ->where('from_user_id', $user->id)
+                ->where(function ($q) use ($user) {
+                    $q->where('from_user_id', $user->id)
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->whereIn('type', ['school-start', 'school-end'])
+                            ->where('to_user_id', $user->id);
+                    });
+                })
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -47,6 +83,7 @@ class NotificationController extends Controller
 
         return response()->json($notifications);
     }
+
     /**
      * Unified notification endpoint for parent and dispatcher actions.
      *
@@ -93,6 +130,15 @@ class NotificationController extends Controller
                 return response()->json(['message' => 'Recipient has no device token'], 200);
             }
 
+            if ($payload['type'] == "arrival-time") {
+                Dispatchee::create([
+                    'user_id' => $fromId,
+                    'type' => $payload['type'] ?? 'arrival-time',
+                    'time' => intval($payload['value'] ?? 0),
+                    'school_id' => $schoolId,
+                ]);
+            }
+
             $firebase->sendToTokens($tokens, $payload['type'] ?? 'Notification', $payload['message'] ?? '', [
                 'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
@@ -110,7 +156,7 @@ class NotificationController extends Controller
                 'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
             ]);
 
-            return response()->json(['message' => 'Notified user'], 200);
+            return response()->json(['message' => 'Notified transfer parent'], 200);
         }
 
         // Parent sending: notify all dispatchers and viewers of their school
@@ -120,12 +166,23 @@ class NotificationController extends Controller
             if (empty($tokens)) {
                 return response()->json(['message' => 'No viewers/dispatchers to notify'], 200);
             }
+
+            if ($payload['type'] == "arrival-time") {
+                Dispatchee::create([
+                    'user_id' => $fromId,
+                    'type' => $payload['type'] ?? 'arrival-time',
+                    'time' => intval($payload['value'] ?? 0),
+                    'school_id' => $schoolId,
+                ]);
+            }
+
             $firebase->sendToTokens($tokens, $payload['type'] ?? 'Parent', $payload['message'] ?? '', [
                 'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
                 'message' => $payload['message'] ?? '',
             ]);
-            foreach ($receivers as $receiver) {
+            $receiverId = User::role(['viewer', 'dispatcher'])->where('school_id', $schoolId)->first()->id ?? null;
+            if ($receiverId) {
                 // Save notification in database
                 Notification::create([
                     'from_user_id' => $fromId,
@@ -133,7 +190,7 @@ class NotificationController extends Controller
                     'message' => $payload['message'] ?? '',
                     'value' => $payload['value'] ?? '',
                     'school_id' => $schoolId,
-                    'to_user_id' => $receiver->id,
+                    'to_user_id' => $receiverId,
                     'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
                 ]);
             }
@@ -152,6 +209,16 @@ class NotificationController extends Controller
             if (empty($tokens)) {
                 return response()->json(['message' => 'No parents to notify'], 200);
             }
+
+            if ($payload['type'] == "arrival-time") {
+                Dispatchee::create([
+                    'user_id' => $fromId,
+                    'type' => $payload['type'] ?? 'arrival-time',
+                    'time' => intval($payload['value'] ?? 0),
+                    'school_id' => $schoolId,
+                ]);
+            }
+
             $firebase->sendToTokens($tokens, $payload['type'] ?? 'Dispatcher', $payload['message'] ?? '', [
                 'fromUserId' => $fromId,
                 'type' => $payload['type'] ?? '',
@@ -170,9 +237,84 @@ class NotificationController extends Controller
                     'sender_role' => $fromUser->getRoleNames()->first() ?? 'unknown'
                 ]);
             }
-            return response()->json(['message' => 'Notified parents'], 200);
+            return response()->json(['message' => 'Notified primary parents'], 200);
         }
 
         return response()->json(['message' => 'Role not allowed for notification'], 403);
+    }
+
+    /**
+     * Update dispatchee status and optionally sum time value
+     *
+     * Payload example:
+     *   {status, value?}
+     *
+     * If value is provided, it will be summed with the existing time value
+     */
+    public function updateDispatchee(Request $request, $dispatcheeId)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $payload = $request->all();
+        $status = $payload['status'] ?? null;
+        $value = $payload['value'] ?? null;
+
+        // Find the dispatchee record
+        $dispatchee = Dispatchee::find($dispatcheeId);
+        if (!$dispatchee) {
+            return response()->json(['message' => 'Dispatchee not found'], 404);
+        }
+
+        if ($status !== null) {
+            // Update status
+            $dispatchee->status = $status;
+        }
+
+        // If value is provided, sum it with the existing time
+        if ($value !== null) {
+            $additionalTime = intval($value);
+            
+            // Get current time as numeric value (in minutes)
+            if ($dispatchee->time) {
+                // If time is stored as datetime, convert to minutes since epoch or similar
+                // For now, assume we're working with numeric minutes
+                $currentTimeValue = is_numeric($dispatchee->time) 
+                    ? intval($dispatchee->time) 
+                    : 0;
+            } else {
+                $currentTimeValue = 0;
+            }
+            
+            // Sum the values
+            $totalTime = $currentTimeValue + $additionalTime;
+            $dispatchee->time = $totalTime;
+        }
+
+        $dispatchee->save();
+
+        return response()->json([
+            'message' => 'Dispatchee updated successfully',
+            'data' => $dispatchee
+        ], 200);
+    }
+
+    /**
+     * List dispatchee records for the authenticated user
+     */
+    public function listDispatchees(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+        $dispatchees = Dispatchee::with('user')
+            ->where('school_id', $user->school_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($dispatchees);
     }
 }

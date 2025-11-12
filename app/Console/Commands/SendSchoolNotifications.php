@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\School;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Dispatchee;
 use App\Services\FirebaseNotificationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -71,24 +72,24 @@ class SendSchoolNotifications extends Command
             if ($now->format('Y-m-d H:i') === $targetStart->format('Y-m-d H:i')) {
                 $cacheKey = "school:{$school->id}:start:" . $targetStart->toDateString();
                 // add returns true only if the key did not exist; keep it for 24 hours
-                if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
+                // if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
                     $type = 'school-start';
                     $message = "School {$school->name} is about to start at {$school->start_time}";
                     $this->sendToParents($school, $firebase, $type, $message);
-                } else {
-                    $this->info("Start notification already sent for school {$school->id} today");
-                }
+                // } else {
+                //     $this->info("Start notification already sent for school {$school->id} today");
+                // }
             }
 
             if ($now->format('Y-m-d H:i') === $targetEnd->format('Y-m-d H:i')) {
                 $cacheKey = "school:{$school->id}:end:" . $targetEnd->toDateString();
-                if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
+                // if (Cache::add($cacheKey, true, 60 * 60 * 24)) {
                     $type = 'school-end';
                     $message = "School {$school->name} is about to end at {$school->end_time}";
                     $this->sendToParents($school, $firebase, $type, $message);
-                } else {
-                    $this->info("End notification already sent for school {$school->id} today");
-                }
+                // } else {
+                //     $this->info("End notification already sent for school {$school->id} today");
+                // }
             }
         }
 
@@ -109,6 +110,7 @@ class SendSchoolNotifications extends Command
         $this->info('Sent to primary parents of school ' . $school->id . ': ' . count($tokens) . ' tokens');
         // Delete any existing notifications of this type for the school to avoid clutter
         Notification::where('school_id', $school->id)->delete();
+        Dispatchee::where('school_id', $school->id)->delete();
         // Save new initial notification record
         $fromId = User::role('admin')->where('school_id', $school->id)->first()->id ?? null;
         foreach ($parents as $parent) {

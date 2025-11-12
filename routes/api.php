@@ -23,6 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Unified notification endpoint for parent and dispatcher actions
     Route::post('/notify/users', [NotificationController::class, 'notifyUsers']);
     Route::get('/notifications', [NotificationController::class, 'listNotifications']);
+    Route::get('/transfer-notifications', [NotificationController::class, 'listSecondaryParentNotifications']);
+    // Update dispatchee status with optional time value summation
+    Route::post('/dispatchee/{dispatcheeId}/update', [NotificationController::class, 'updateDispatchee']);
+    Route::get('/dispatchee/list', [NotificationController::class, 'listDispatchees']);
     // Related parents lookup
     Route::post('/parents/related', [ParentController::class, 'relatedParents']);
 });
