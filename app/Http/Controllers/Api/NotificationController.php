@@ -251,7 +251,7 @@ class NotificationController extends Controller
      *
      * If value is provided, it will be summed with the existing time value
      */
-    public function updateDispatchee(Request $request, $dispatcheeId)
+    public function updateDispatchee(Request $request)
     {
         $user = $request->user();
         if (!$user) {
@@ -259,38 +259,45 @@ class NotificationController extends Controller
         }
 
         $payload = $request->all();
+        $parent_id = $payload['parent_id'] ?? null;
         $status = $payload['status'] ?? null;
         $value = $payload['value'] ?? null;
 
-        // Find the dispatchee record
-        $dispatchee = Dispatchee::find($dispatcheeId);
+        // Determine which user's dispatchee record to update
+        if ($user->hasRole('parent')) {
+            $targetUserId = $user->id;
+        } elseif ($user->hasAnyRole(['dispatcher', 'viewer'])) {
+            $targetUserId = $parent_id;
+            if (!$targetUserId) {
+                return response()->json(['message' => 'parent_id is required for dispatcher/viewer'], 422);
+            }
+            $parent = User::find($targetUserId);
+            if (!$parent || !$parent->hasRole('parent')) {
+                return response()->json(['message' => 'Parent not found'], 404);
+            }
+            // Optional: prevent cross-school updates
+            if ($user->school_id && $parent->school_id && $user->school_id !== $parent->school_id) {
+                return response()->json(['message' => 'Parent is not in the same school'], 422);
+            }
+        } else {
+            return response()->json(['message' => 'Role not allowed to update dispatchee'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Find the dispatchee record matching the id and target user
+        $dispatchee = Dispatchee::where('user_id', $targetUserId)->first();
+
         if (!$dispatchee) {
             return response()->json(['message' => 'Dispatchee not found'], 404);
         }
 
         if ($status !== null) {
-            // Update status
             $dispatchee->status = $status;
         }
 
-        // If value is provided, sum it with the existing time
         if ($value !== null) {
             $additionalTime = intval($value);
-            
-            // Get current time as numeric value (in minutes)
-            if ($dispatchee->time) {
-                // If time is stored as datetime, convert to minutes since epoch or similar
-                // For now, assume we're working with numeric minutes
-                $currentTimeValue = is_numeric($dispatchee->time) 
-                    ? intval($dispatchee->time) 
-                    : 0;
-            } else {
-                $currentTimeValue = 0;
-            }
-            
-            // Sum the values
-            $totalTime = $currentTimeValue + $additionalTime;
-            $dispatchee->time = $totalTime;
+            $currentTimeValue = is_numeric($dispatchee->time) ? intval($dispatchee->time) : 0;
+            $dispatchee->time = $currentTimeValue + $additionalTime;
         }
 
         $dispatchee->save();
