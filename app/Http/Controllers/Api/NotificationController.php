@@ -77,7 +77,14 @@ class NotificationController extends Controller
         }
 
         $notifications = Notification::with(['fromUser', 'toUser'])
-            ->where('school_id', $user->school_id)
+            // ->where('school_id', $user->school_id)
+            ->where(function ($q) use ($user) {
+                $q->where('school_id', $user->school_id)
+                ->orWhere(function ($q2) use ($user) {
+                    $q2->whereIn('type', ['school-start', 'school-end'])
+                        ->where('to_user_id', $user->id);
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
