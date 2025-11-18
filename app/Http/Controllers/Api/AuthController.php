@@ -68,7 +68,7 @@ class AuthController extends Controller
             ]);
 
             // Find the user by email
-            $user = User::where('email', $request->email)->first();
+            $user = User::with('school')->where('email', $request->email)->first();
 
             // Check if user exists and password is correct
             if (!$user || !Hash::check($request->password, $user->password)) {
@@ -153,7 +153,17 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        if ($user) {
+            // Clear device token so push notifications won't be sent to this device
+            $user->device_token = null;
+            $user->save();
+
+            // Delete current access token if present
+            if ($user->currentAccessToken()) {
+                $user->currentAccessToken()->delete();
+            }
+        }
 
         return response()->json([
             'message' => 'Logout successful.'
